@@ -9,6 +9,12 @@ import {
   InputLabel,
   Select,
 } from '@material-ui/core';
+
+import { ToggleButtonGroup, ToggleButton } from '@material-ui/lab';
+
+import CreateIcon from '@material-ui/icons/Create';
+import BrushIcon from '@material-ui/icons/Brush';
+
 import useStyles from './styles';
 
 const operations = [
@@ -30,6 +36,7 @@ const App = () => {
   });
   const [running, setRunning] = useState(false);
   const [drawing, setDrawing] = useState(false);
+  const [tool, setTool] = useState('brush');
   const [grid, setGrid] = useState([]);
 
   const runningRef = useRef(running);
@@ -86,7 +93,11 @@ const App = () => {
 
   const draw = (i, j) => {
     const newGrid = produce(grid, (gridCopy) => {
-      gridCopy[i][j] = 1;
+      if (tool === 'brush') {
+        gridCopy[i][j] = 1;
+      } else if (tool === 'pen') {
+        gridCopy[i][j] = gridCopy[i][j] ? 0 : 1;
+      }
     });
     setGrid(newGrid);
   };
@@ -95,10 +106,27 @@ const App = () => {
     setGridSize(JSON.parse(event.target.value));
   };
 
+  const changeTool = (event, newTool) => {
+    setTool(newTool);
+  };
+
   return (
     <>
       <CssBaseline />
       <Container maxWidth='md' className={classes.container}>
+        <ToggleButtonGroup
+          value={tool}
+          exclusive
+          onChange={changeTool}
+          aria-label='text alignment'
+        >
+          <ToggleButton value='brush' aria-label='brush'>
+            <BrushIcon />
+          </ToggleButton>
+          <ToggleButton value='pen' aria-label='pen'>
+            <CreateIcon />
+          </ToggleButton>
+        </ToggleButtonGroup>
         <ButtonGroup
           variant='contained'
           color='primary'
@@ -177,11 +205,15 @@ const App = () => {
               <div
                 key={`${i}${j}`}
                 onClick={() => {
-                  if (!drawing) draw(i, j);
-                  setDrawing(!drawing);
+                  if (tool === 'brush') {
+                    if (!drawing) draw(i, j);
+                    setDrawing(!drawing);
+                  } else if (tool === 'pen') {
+                    draw(i, j);
+                  }
                 }}
                 onMouseOver={() => {
-                  if (drawing) draw(i, j);
+                  if (drawing && tool === 'brush') draw(i, j);
                 }}
                 style={{
                   width: 20,
